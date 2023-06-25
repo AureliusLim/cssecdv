@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://aureliuslim2:KXHGXFVVPC5LAOsm@cluster0.qmyar.mongodb.net/?retryWrites=true&w=majority";
 const fileUpload = require('express-fileupload');
 const bcrypt = require('bcrypt');
 const Account = require('./model/accountSchema');
@@ -13,7 +15,7 @@ app.use(express.static(__dirname));
 app.use(express.json());
 app.use(fileUpload());
 app.set('views', './frontend');
-mongoose.connect('mongodb://0.0.0.0/cssecdvDB', {
+mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -82,6 +84,7 @@ app.post('/registerdetails', async (req, res) => {
       } else {
         console.log("ADDED");
         console.log(account);
+        res.send("Account successfully registered")
       }
     });
   } catch (err) {
