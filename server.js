@@ -84,37 +84,38 @@ app.post('/registerdetails', async (req, res) => {
         res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
         return;
       }
+      try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+    
+        const account = await Account.create({
+          fullName: fullname,
+          email: email,
+          phoneNumber: phone,
+          profilePhoto: "images/" + profphoto.name,
+          password: hashedPassword // Store the hashed password in the database
+        });
+    
+        const uploadPath = path.join(__dirname, 'images', profphoto.name);
+        profphoto.mv(uploadPath, (error) => {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("ADDED");
+            console.log(account);
+            res.send("Account successfully registered")
+          }
+        });
+      } catch (err) {
+        console.log(err);
+      }
   }
   catch(err){
     res.send('<script>alert("Something went wrong"); window.location.href = "/register";</script>');
     return;
   }
 
-  try {
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const account = await Account.create({
-      fullName: fullname,
-      email: email,
-      phoneNumber: phone,
-      profilePhoto: "images/" + profphoto.name,
-      password: hashedPassword // Store the hashed password in the database
-    });
-
-    const uploadPath = path.join(__dirname, 'images', profphoto.name);
-    profphoto.mv(uploadPath, (error) => {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("ADDED");
-        console.log(account);
-        res.send("Account successfully registered")
-      }
-    });
-  } catch (err) {
-    console.log(err);
-  }
+  
 });
 
 
