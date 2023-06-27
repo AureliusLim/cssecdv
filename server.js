@@ -59,11 +59,36 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/registerdetails', async (req, res) => {
-  const profphoto = req.files.profilephoto;
-  const fullname = req.body.fullname;
-  const email = req.body.email;
-  const phone = req.body.phone;
-  const password = req.body.password;
+  try{
+      const profphoto = req.files.profilephoto;
+      const fullname = req.body.fullname;
+      const email = req.body.email;
+      const phone = req.body.phone;
+      const password = req.body.password;
+
+      // Input validation using regular expressions
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const phoneRegex = /^09\d{9}$/;
+      if (!emailRegex.test(email)) {
+        res.send('<script>alert("Invalid email format"); window.location.href = "/register";</script>');
+        return;
+      }
+
+      if (!phoneRegex.test(phone)) {
+        res.send('<script>alert("Invalid phone number"); window.location.href = "/register";</script>');
+        return;
+      }
+    
+      // Check if any of the input fields are empty
+      if (!profphoto || !fullname || !email || !phone || !password) {
+        res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
+        return;
+      }
+  }
+  catch(err){
+    res.send('<script>alert("Something went wrong"); window.location.href = "/register";</script>');
+    return;
+  }
 
   try {
     // Hash the password
