@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Administration</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <th>
+                User Emails
+            </th>
+            <th>
+                Full Name
+            </th>
+            <th>
+                Phone No.
+            </th>
+        </tr>
+        {{#each users}}
+            <tr>
+                <td>
+                    {{this.email}}
+                </td>
+                <td>
+                    {{this.fullName}}
+                </td>
+                <td>
+                    {{this.phoneNumber}}
+                </td>
+            </tr>
+        {{/each}}
+    </table>
+</body>
+</html>

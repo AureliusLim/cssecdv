@@ -39,7 +39,15 @@ app.post('/login', async (req, res) => {
   
         if (isMatch) {
           // Passwords match, user is authenticated
-          res.send('Login successful');
+
+          if(user.role == "user"){// default login
+            res.render('main.hbs');
+          }
+          else{// user is an admin
+            res.redirect('/administration')
+          }
+          
+          //res.send('Login successful');
         } else {
           // Passwords do not match
           res.send('Invalid credentials');
@@ -54,6 +62,22 @@ app.post('/login', async (req, res) => {
     }
   });
 
+// Logout Function
+app.get('/logout', (req, res) => {
+  res.render('login.hbs');
+});
+
+// Administration Function
+app.get('/administration', async (req, res) => {
+  const users = await Account.find({role:"user"});
+  console.log("the users:")
+  console.log(users)
+  res.render('administration.hbs', {
+    users: users
+  })
+})
+
+// Direct to registration hbs
 app.get('/register', (req, res) => {
   res.render('registration.hbs');
 });
@@ -93,7 +117,8 @@ app.post('/registerdetails', async (req, res) => {
           email: email,
           phoneNumber: phone,
           profilePhoto: "images/" + profphoto.name,
-          password: hashedPassword // Store the hashed password in the database
+          password: hashedPassword, // Store the hashed password in the database
+          role: "user"
         });
     
         const uploadPath = path.join(__dirname, 'images', profphoto.name);
@@ -103,7 +128,7 @@ app.post('/registerdetails', async (req, res) => {
           } else {
             console.log("ADDED");
             console.log(account);
-            res.send("Account successfully registered")
+            res.render('login.hbs')
           }
         });
       } catch (err) {
