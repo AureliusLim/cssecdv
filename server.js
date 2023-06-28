@@ -39,7 +39,8 @@ app.post('/login', async (req, res) => {
   
         if (isMatch) {
           // Passwords match, user is authenticated
-          res.send('Login successful');
+          res.render('main.hbs');
+          //res.send('Login successful');
         } else {
           // Passwords do not match
           res.send('Invalid credentials');
@@ -54,6 +55,21 @@ app.post('/login', async (req, res) => {
     }
   });
 
+// Logout Function
+app.get('/logout', (req, res) => {
+  res.render('login.hbs');
+});
+
+// Administration Function
+app.get('/administration', async (req, res) => {
+  const users = await Account.find({});
+  console.log(users)
+  res.render('administration', {
+    users: users
+  })
+})
+
+// Direct to registration hbs
 app.get('/register', (req, res) => {
   res.render('registration.hbs');
 });
@@ -84,7 +100,7 @@ app.post('/registerdetails', async (req, res) => {
       } else {
         console.log("ADDED");
         console.log(account);
-        res.send("Account successfully registered")
+        res.render('login.hbs')
       }
     });
   } catch (err) {
