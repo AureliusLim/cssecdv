@@ -67,7 +67,7 @@ app.post('/registerdetails', async (req, res) => {
       const password = req.body.password;
 
       // Input validation using regular expressions
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[a-zA-Z0-9]+([_.-][a-zA-Z0-9])*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
       const phoneRegex = /^09\d{9}$/;
       if (!emailRegex.test(email)) {
         res.send('<script>alert("Invalid email format"); window.location.href = "/register";</script>');
