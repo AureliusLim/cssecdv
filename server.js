@@ -108,6 +108,14 @@ app.post('/registerdetails', async (req, res) => {
         res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
         return;
       }
+
+       // Check if the email already exists in the database
+      const existingUser = await Account.findOne({ email });
+      if (existingUser) {
+        res.send('<script>alert("Email already registered"); window.location.href = "/register";</script>');
+        return;
+      }
+      
       try {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
