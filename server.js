@@ -7,7 +7,9 @@ const bcrypt = require('bcrypt');
 const Account = require('./model/accountSchema');
 const path = require('path');
 const app = express();
+const session = require('express-session');
 const port = 4000;
+
 
 // Set up the 'hbs' view engine
 app.set('view engine', 'hbs');
@@ -19,6 +21,20 @@ mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+
+app.use(session({
+  secret: 'supersecretsessionkeynamedyomadalimakuha',
+  resave: false,
+  saveUninitialized: false
+}))
+
+const ensureAuth = (req, res, next) => { //for the future pag di na res.render yung login lang
+  if (req.session.auth)
+    next()
+  else
+    res.redirect('/')
+}
 
 // Define a route for '/register' to render the registration template
 app.get('/', (req, res) => {
@@ -39,11 +55,13 @@ app.post('/login', async (req, res) => {
   
         if (isMatch) {
           // Passwords match, user is authenticated
+          req.session.auth = true;
 
           if(user.role == "user"){// default login
             res.render('main.hbs');
           }
           else{// user is an admin
+            req.session.isAdmin = true
             res.redirect('/administration')
           }
           
@@ -68,7 +86,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Administration Function
-app.get('/administration', async (req, res) => {
+app.get('/administration', ensureAuth, async (req, res) => {
   const users = await Account.find({role:"user"});
   console.log("the users:")
   console.log(users)
