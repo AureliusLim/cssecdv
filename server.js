@@ -8,6 +8,7 @@ const Account = require('./model/accountSchema');
 const path = require('path');
 const app = express();
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const port = 4000;
 
 
@@ -22,7 +23,6 @@ mongoose.connect(uri, {
   useUnifiedTopology: true,
 });
 
-
 app.use(session({
   secret: 'supersecretsessionkeynamedyomadalimakuha',
   resave: false,
@@ -36,12 +36,18 @@ const ensureAuth = (req, res, next) => { //for the future pag di na res.render y
     res.redirect('/')
 }
 
+const loginLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 5, // maximum of 10 login attempts
+  message: "Too many login attempts, please try again later"
+})
+
 // Define a route for '/register' to render the registration template
 app.get('/', (req, res) => {
   res.render('login.hbs');
 });
 // Handle the login form submission
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimit, async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
   
