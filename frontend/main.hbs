@@ -3,15 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <title>Main</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 50px auto 0;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            font-family: "Arial", sans-serif;
+        }
+
+        .container h1,
+        .container h2,
+        .container h3,
+        .container p {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            background-color: #e91d1d;
+            color: #fff;
+            cursor: pointer;
+            flex: 1;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Main</h1>
-    <h2>Login Successful</h2>
-    
-    <form action="/logout">
-        <button type="submit">Logout</button>
-    </form>
+    <div class="container">
+        <h1>Main View</h1>
+        <h2>Login Successful</h2>
+        <h3>User Details:</h3>
+        <img src="{{profilePhoto}}" alt="Profile Photo" style="width: 200px; height: auto;">
+        <p>Full Name: {{fullName}}</p>
+        <p>Email: {{email}}</p>
+        <p>Phone Number: {{phoneNumber}}</p>
+        <p>Role: {{role}}</p>
+
+        <form action="/logout">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
 </body>
 
 </html>

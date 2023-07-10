@@ -1,10 +1,52 @@
 <html>
 <head>
     <title>Administration</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 50px auto 0;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            font-family: "Arial", sans-serif;
+        }
+
+        .container h1,
+        .container h2,
+        .container h3,
+        .container p {
+            font-size: 18px;
+            line-height: 1.4;
+        }
+
+        td{
+            padding:5px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            background-color: #e91d1d;
+            color: #fff;
+            cursor: pointer;
+            flex: 1;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Welcome Admin!</h1>
+        <h1>User Accounts</h1>
     <table>
         <tr>
+            <th>
+                Profile Photo
+            </th>
             <th>
                 User Emails
             </th>
@@ -17,6 +59,9 @@
         </tr>
         {{#each users}}
             <tr>
+                <td>
+                    <img src="{{this.profilePhoto}}" alt="Profile Photo" style="width: 100px; height: auto;">
+                </td>
                 <td>
                     {{this.email}}
                 </td>
@@ -32,5 +77,6 @@
      <form action="/logout">
         <button type="submit">Logout</button>
     </form>
+    </div>
 </body>
 </html>

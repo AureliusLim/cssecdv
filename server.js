@@ -5,6 +5,7 @@ const Account = require('./model/accountSchema');
 const path = require('path');
 const app = express();
 const session = require('express-session');
+const mime = require('mime-types');
 const port = 4000;
 
 
@@ -62,7 +63,8 @@ app.post('/login', async (req, res) => {
             req.session.email = email;
             if(user[6] == "user"){// default login
               req.session.isAdmin = false;
-              res.render('main.hbs');
+              console.log(user)
+              res.render('main.hbs', {profilePhoto: user[4], fullName: user[1], email: user[2], phoneNumber: user[3], role: user[6]});
             }
             else{// user is an admin
               req.session.isAdmin = true
@@ -104,8 +106,7 @@ app.get('/administration', ensureAuth, (req, res) => {
       Account.node.query(query, ['user'], (error, results) => {
         if (error) {
           console.error('Error retrieving users:', error);
-          res.send('Error occurred');
-          return;
+          return res.send('Error occurred');
         }
 
         const users = Object.values(results);
@@ -139,7 +140,7 @@ app.get('/register', (req, res) => {
   res.render('registration.hbs');
 });
 
-app.post('/registerdetails', (req, res) => {
+app.post('/registerdetails', async(req, res) => {
   try{
       const profphoto = req.files.profilephoto;
       const fullname = req.body.fullname;
@@ -161,6 +162,11 @@ app.post('/registerdetails', (req, res) => {
       // Check if any of the input fields are empty
       if (!profphoto || !fullname || !email || !phone || !password) {
         return res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
+      }
+      // Check if the uploaded file is an image
+      const fileMimeType = mime.lookup(profphoto.name);
+      if (!fileMimeType || !fileMimeType.startsWith('image/')) {
+        return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
         // Check if the email already exists in the database
