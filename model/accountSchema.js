@@ -28,29 +28,30 @@ pool.query(accountTable, (error, results, fields) => {
     return;
   }
   console.log('Accounts table created successfully');
+  const adminEmail = 'admin@gmail.com';
+  const adminPassword = 'adminacc';
+  const adminRole = 'admin';
+  //check if admin already exists
+  pool.query('SELECT * FROM accounts WHERE email = ?', [adminEmail], async (error, results) => {
+    if (error) {
+      console.error('Error checking for admin account:', error);
+      return;
+    }
+    else if(results.length == 0){
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      let query = "INSERT INTO accounts (fullName, email, phoneNumber, profilePhoto, password, role) VALUES(?,?,?,?,?,?)";
+      pool.query(query, ["Admin", adminEmail, "00000000000", "", hashedPassword, "admin"], (err, result)=>{
+        if(err){
+          console.log("Admin account not made")
+        }
+        else{
+          console.log("Admin account created successfully")
+        }
+      })
+    }
+  })
+
 });
-const adminEmail = 'admin@gmail.com';
-const adminPassword = 'adminacc';
-const adminRole = 'admin';
-//check if admin already exists
-pool.query('SELECT * FROM accounts WHERE email = ?', [adminEmail], async (error, results) => {
-  if (error) {
-    console.error('Error checking for admin account:', error);
-    return;
-  }
-  else if(results.length == 0){
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    let query = "INSERT INTO accounts (fullName, email, phoneNumber, profilePhoto, password, role) VALUES(?,?,?,?,?,?)";
-    pool.query(query, ["Admin", adminEmail, "00000000000", "", hashedPassword, "admin"], (err, result)=>{
-      if(err){
-        console.log("Admin account not made")
-      }
-      else{
-        console.log("Admin account created successfully")
-      }
-    })
-  }
-})
 
 
 
