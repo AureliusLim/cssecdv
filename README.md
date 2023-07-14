@@ -1,4 +1,4 @@
-# cssevdv
+# CSSECDV
  
 Castillo, Solomon Nivron
 Lim, Aurelius Justin
@@ -13,7 +13,7 @@ CSSECDV - S11
 - MySQL Workbench (Version 8.0)
 - Node.js (Version 18.15)
 
-# MySQL Workbench Setup
+# MySQL Workbench Setup:
 - Make sure that the local instance connection have these credentials:
 - User is root
 - Password is 12345
