@@ -70,7 +70,7 @@ app.post('/login', loginLimit, async (req, res) => {
             req.session.email = email;
             if(user[6] == "user"){// default login
               req.session.isAdmin = false;
-              console.log(user)
+              //console.log(user)
               res.render('main.hbs', {profilePhoto: user[4], fullName: user[1], email: user[2], phoneNumber: user[3], role: user[6]});
             }
             else{// user is an admin
@@ -93,7 +93,7 @@ app.post('/login', loginLimit, async (req, res) => {
 
       
     } catch (err) {
-      console.log(err);
+      //console.log(err);
       res.send('Error occurred');
     }
   });
@@ -120,8 +120,8 @@ app.get('/administration', ensureAuth, (req, res) => {
 
         const users = Object.values(results);
 
-        console.log('the users:');
-        console.log(users);
+        //console.log('the users:');
+        //console.log(users);
         res.render('administration.hbs', {
           users: users,
         });
@@ -134,7 +134,7 @@ app.get('/administration', ensureAuth, (req, res) => {
     }
   }
   catch(err){
-    console.log(err)
+    //console.log(err)
     res.render('/')
   }
   
@@ -182,7 +182,7 @@ app.post('/registerdetails', async(req, res) => {
         let query = "SELECT * from accounts where email = ?";
         Account.node.query(query, [email], async(error, existingUser)=>{
           if(existingUser && existingUser.length > 0){
-            console.log(existingUser)
+            //console.log(existingUser)
             return res.send('<script>alert("Email already registered"); window.location.href = "/register";</script>');
           }
           else{ // register the account
@@ -193,19 +193,19 @@ app.post('/registerdetails', async(req, res) => {
               let query = "INSERT INTO accounts (fullName, email, phoneNumber, profilePhoto, password, role) VALUES(?,?,?,?,?,?)";
               Account.node.query(query,[fullname, email, phone, "images/" + profphoto.name, hashedPassword, "user"], (err, result)=>{
                 if(err){
-                  console.log(err);
+                  //console.log(err);
                   return;
                 }
                 else{
-                  console.log("ADDING THE ACCOUNT:")
-                  console.log(result);
+                  //console.log("ADDING THE ACCOUNT:")
+                  //console.log(result);
                   const uploadPath = path.join(__dirname, 'images', profphoto.name);
                   profphoto.mv(uploadPath, (error) => {
                     if (error) {
-                      console.log("failed to save photo")
-                      console.log(error);
+                      //console.log("failed to save photo")
+                      //console.log(error);
                     } else {
-                      console.log("ADDED");
+                      //console.log("ADDED");
                       res.redirect('/')
                     }
                   });
@@ -214,7 +214,7 @@ app.post('/registerdetails', async(req, res) => {
             
             } 
             catch (err) {
-              console.log(err);
+              //console.log(err);
             }
           }
         })
@@ -222,7 +222,7 @@ app.post('/registerdetails', async(req, res) => {
       
   }
   catch(err){
-    console.log(err)
+    //console.log(err)
     res.send('<script>alert("Something went wrong"); window.location.href = "/register";</script>');
   }
 
@@ -232,5 +232,5 @@ app.post('/registerdetails', async(req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  //console.log(`Server running on port ${port}`);
 });
