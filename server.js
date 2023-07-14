@@ -6,6 +6,7 @@ const path = require('path');
 const app = express();
 const session = require('express-session');
 const mime = require('mime-types');
+const rateLimit = require('express-rate-limit');
 const port = 4000;
 
 
@@ -15,7 +16,6 @@ app.use(express.static(__dirname));
 app.use(express.json());
 app.use(fileUpload());
 app.set('views', './frontend');
-
 
 
 app.use(session({
@@ -31,13 +31,20 @@ const ensureAuth = (req, res, next) => { //for the future pag di na res.render y
     res.redirect('/')
 }
 
+const loginLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 5, // maximum of 5 failed login attempts
+  skipSuccessfulRequests: true,
+  message: "Too many login attempts, please try again later"
+})
+
 // Define a route for '/register' to render the registration template
 app.get('/', (req, res) => {
   
   res.render('login.hbs');
 });
 // Handle the login form submission
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimit, async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     
@@ -74,11 +81,13 @@ app.post('/login', async (req, res) => {
             //res.send('Login successful');
           } else {
             // Passwords do not match
-            res.send('Invalid credentials');
+            req.session.isAuth = false;
+            res.status(404).send('Invalid credentials');
           }
         } else {
           // User not found
-          res.send('invalid credentials');
+          req.session.isAuth = false;
+          res.status(404).send('Invalid credentials');
         }
       })
 
