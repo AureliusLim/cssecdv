@@ -38,7 +38,8 @@ const ensureAuth = (req, res, next) => { //for the future pag di na res.render y
 
 const loginLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 5, // maximum of 10 login attempts
+	max: 5, // maximum of 5 failed login attempts
+  skipSuccessfulRequests: true,
   message: "Too many login attempts, please try again later"
 })
 
@@ -74,11 +75,13 @@ app.post('/login', loginLimit, async (req, res) => {
           //res.send('Login successful');
         } else {
           // Passwords do not match
-          res.send('Invalid credentials');
+          req.session.isAuth = false;
+          res.status(404).send('Invalid credentials');
         }
       } else {
         // User not found
-        res.send('invalid credentials');
+        req.session.isAuth = false;
+        res.status(404).send('Invalid credentials');
       }
     } catch (err) {
       console.log(err);
@@ -88,6 +91,7 @@ app.post('/login', loginLimit, async (req, res) => {
 
 // Logout Function
 app.get('/logout', (req, res) => {
+  req.session.destroy();
   res.render('login.hbs');
 });
 
