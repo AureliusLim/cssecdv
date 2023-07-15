@@ -7,6 +7,8 @@ const app = express();
 const session = require('express-session');
 const mime = require('mime-types');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs')
+const fileType = require('file-type');
 const port = 4000;
 
 
@@ -14,7 +16,10 @@ const port = 4000;
 app.set('view engine', 'hbs');
 app.use(express.static(__dirname));
 app.use(express.json());
-app.use(fileUpload());
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: './temp', // temp path
+}));
 app.set('views', './frontend');
 
 
@@ -161,20 +166,65 @@ app.post('/registerdetails', async(req, res) => {
       const emailRegex = /^[a-zA-Z0-9]+([_.-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
       const phoneRegex = /^09\d{9}$/;
       if (!emailRegex.test(email)) {
+        fs.unlink(profphoto.tempFilePath, (err) => {
+          if (err) {
+            //console.error('Failed to delete temporary file:', err);
+          } else {
+            //console.log('Temporary file deleted');
+          }
+        });
         return res.send('<script>alert("Invalid email format"); window.location.href = "/register";</script>');
       }
 
       if (!phoneRegex.test(phone)) {
+        fs.unlink(profphoto.tempFilePath, (err) => {
+          if (err) {
+            //console.error('Failed to delete temporary file:', err);
+          } else {
+            //console.log('Temporary file deleted');
+          }
+        });
         return res.send('<script>alert("Invalid phone number"); window.location.href = "/register";</script>');
       }
     
       // Check if any of the input fields are empty
       if (!profphoto || !fullname || !email || !phone || !password) {
+        fs.unlink(profphoto.tempFilePath, (err) => {
+          if (err) {
+            //console.error('Failed to delete temporary file:', err);
+          } else {
+            //console.log('Temporary file deleted');
+          }
+        });
         return res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
       }
       // Check if the uploaded file is an image
       const fileMimeType = mime.lookup(profphoto.name);
       if (!fileMimeType || !fileMimeType.startsWith('image/')) {
+        fs.unlink(profphoto.tempFilePath, (err) => {
+          if (err) {
+            //console.error('Failed to delete temporary file:', err);
+          } else {
+            //console.log('Temporary file deleted');
+          }
+        });
+        return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
+      }
+
+      // Read the file contents
+      console.log(profphoto)
+      const fileData = fs.readFileSync(profphoto.tempFilePath);
+
+      // Validate the magic number
+      const fileTypeResult = fileType(fileData);
+      if (!fileTypeResult || !fileTypeResult.mime.startsWith('image/')) {
+        fs.unlink(profphoto.tempFilePath, (err) => {
+          if (err) {
+            //console.error('Failed to delete temporary file:', err);
+          } else {
+            //console.log('Temporary file deleted');
+          }
+        });
         return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
@@ -183,6 +233,13 @@ app.post('/registerdetails', async(req, res) => {
         Account.node.query(query, [email], async(error, existingUser)=>{
           if(existingUser && existingUser.length > 0){
             //console.log(existingUser)
+            fs.unlink(profphoto.tempFilePath, (err) => {
+              if (err) {
+                //console.error('Failed to delete temporary file:', err);
+              } else {
+                //console.log('Temporary file deleted');
+              }
+            });
             return res.send('<script>alert("Email already registered"); window.location.href = "/register";</script>');
           }
           else{ // register the account
@@ -206,6 +263,7 @@ app.post('/registerdetails', async(req, res) => {
                       //console.log(error);
                     } else {
                       //console.log("ADDED");
+                      
                       res.redirect('/')
                     }
                   });
@@ -222,7 +280,7 @@ app.post('/registerdetails', async(req, res) => {
       
   }
   catch(err){
-    //console.log(err)
+    console.log(err)
     res.send('<script>alert("Something went wrong"); window.location.href = "/register";</script>');
   }
 
