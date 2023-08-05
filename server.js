@@ -26,7 +26,10 @@ app.set('views', './frontend');
 app.use(session({
   secret: 'supersecretsessionkeynamedyomadalimakuha',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 30 * 60 * 1000 // 30 mins in milliseconds
+  }
 }))
 
 const ensureAuth = (req, res, next) => { //for the future pag di na res.render yung login lang
@@ -34,6 +37,13 @@ const ensureAuth = (req, res, next) => { //for the future pag di na res.render y
     next()
   else
     res.redirect('/')
+}
+
+const ensureNotAuth = (req, res, next) => {
+  if(req.session.auth){
+    return res.redirect('/main');
+  }
+  next();
 }
 
 const loginLimit = rateLimit({
@@ -44,12 +54,12 @@ const loginLimit = rateLimit({
 })
 
 // Define a route for '/register' to render the registration template
-app.get('/', (req, res) => {
+app.get('/', ensureNotAuth, (req, res) => {
   
   res.render('login.hbs');
 });
 // Handle the login form submission
-app.post('/login', loginLimit, async (req, res) => {
+app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     
@@ -103,8 +113,25 @@ app.post('/login', loginLimit, async (req, res) => {
     }
   });
 
+app.get('/main', ensureAuth, async (req, res) =>{
+  let query = 'SELECT * FROM accounts WHERE email = ?';
+  let email = req.session.email;
+  if(email){
+    Account.node.query(query, [email], async(error, results) => {
+      if (results.length == 0) { // no email matched
+        console.error('Error retrieving user:', error);
+        return res.send('Invalid User');
+      }
+      user = Object.values(results[0]);
+      res.render('main.hbs', {profilePhoto: user[4], fullName: user[1], email: user[2], phoneNumber: user[3], role: user[6]});
+    });
+  } else {
+    res.send('Error occured')
+  }
+});
+
 // Logout Function
-app.get('/logout', (req, res) => {
+app.get('/logout', ensureAuth, (req, res) => {
   req.session.destroy();
   res.render('login.hbs');
 });
@@ -133,14 +160,13 @@ app.get('/administration', ensureAuth, (req, res) => {
       });
         
         
-    }
-    else{
-      res.render('login.hbs')
+    } else {
+      res.redirect('/main')
     }
   }
   catch(err){
     //console.log(err)
-    res.render('/')
+    res.send('error has occurred')
   }
   
 
@@ -150,11 +176,11 @@ app.get('/administration', ensureAuth, (req, res) => {
 });
 
 // Direct to registration hbs
-app.get('/register', (req, res) => {
+app.get('/register', ensureNotAuth, (req, res) => {
   res.render('registration.hbs');
 });
 
-app.post('/registerdetails', async(req, res) => {
+app.post('/registerdetails', ensureNotAuth, async(req, res) => {
   try{
    
       const profphoto = req.files.profilephoto;
@@ -287,7 +313,7 @@ app.post('/registerdetails', async(req, res) => {
   
 });
 
-app.post('/editAdmin', async(req, res) => {
+app.post('/editAdmin', ensureAuth, async(req, res) => {
   // Input validation using regular expressions
   const email = req.body.email;
   const id = req.body.id;
