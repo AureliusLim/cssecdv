@@ -2,20 +2,25 @@
 <head>
     <title>Administration</title>
     <script>
-        function openModal(ID){
-            const modal = document.getElementById('editModal'+ID);
+        function openModal(x){
+            console.log('editModal' + x)
+            const modal = document.getElementById('editModal'+x);
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'block';
             modal.style.display = 'block';
            
         }
-        function closeModal(ID){
-            const modal = document.getElementById('editModal'+ID);
+        function closeModal(x){
+            const modal = document.getElementById('editModal'+x);
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'none';
             modal.style.display = 'none';
             location.reload();
         }
-        function updateFileLabel(ID) {
+        function updateFileLabel(x) {
          
-            const fileInput = document.getElementById('profilephoto' + ID);
-            const fileLabel = document.getElementById('filelabel' + ID);
+            const fileInput = document.getElementById('profilephoto' + x);
+            const fileLabel = document.getElementById('filelabel' + x);
                
             // Check if a file is selected
             if (fileInput.files.length > 0) {
@@ -30,9 +35,36 @@
                 console.log('No file selected')
             }
         }
+
+        function deleteModal(x){
+
+            const modal = document.getElementById('deleteModal'+x);
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'block';
+            modal.style.display = 'block'
+        }
+
+        function closeDeleteModal(x){
+            const modal = document.getElementById('deleteModal'+x);
+             const overlay = document.getElementById('overlay');
+            overlay.style.display = 'none';
+            modal.style.display = 'none';
+            location.reload();
+        }
+
     </script>
 
     <style>
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            z-index: 9998; /* Ensure it appears behind the modal but above the rest of the content */
+            display: none; /* Initially hidden */
+        }
         .container {
             max-width: 600px;
             margin: 50px auto 0;
@@ -66,7 +98,8 @@
             margin-right: 10px;
             font-size: 16px;
         }
-        .edit-icon{
+        .icon{
+            padding:10px;
             background-color: transparent;
         }
        
@@ -127,7 +160,7 @@
     </style>
 </head>
 <body>
-     
+     <div class="overlay" id="overlay"></div>
     <div class="container">
         <h1>Welcome Admin!</h1>
         <h1>User Accounts</h1>
@@ -150,11 +183,10 @@
         {{#each users}}
         <!-- Edit User Modal -->
         
-        <div id="editModal{{this.id}}" class="editModal" style="display:none">
+        <div id="editModal{{this.email}}" class="editModal" style="display:none">
             <h2>Edit User</h2>
             <form id="editForm" action="/editAdmin" method="POST" enctype="multipart/form-data">
-                <!-- Hidden input field to store the user ID -->
-                <input type="hidden" name="id" value="{{this.id}}">
+                <input type="hidden" id="originalemail" name="originalemail" value="{{this.email}}">
                 <label>Email:</label>
                 <input type="text" id="email" name="email" required value="{{this.email}}">
                 <br>
@@ -164,12 +196,25 @@
                 <label>Phone No.:</label>
                 <input type="text" id="phone" name="phone" required value="{{this.phoneNumber}}">
                 <br>
-                    <label for="profilephoto{{this.id}}" class="edit-picture-btn" id="filelabel{{this.id}}">Change Profile Photo</label>
-                    <input type="file" id="profilephoto{{this.id}}" name="profilephoto" class="profilephoto" accept="image/jpeg, image/png, image/gif" onchange="updateFileLabel({{this.id}})">
-                <button type="submit" onclick="closeModal({{this.id}})">Save</button>
-                <button type="button" onclick="closeModal({{this.id}})">Cancel</button>
+                    <label for="profilephoto{{this.email}}" class="edit-picture-btn" id="filelabel{{this.email}}">Change Profile Photo</label>
+                    <input type="file" id="profilephoto{{this.email}}" name="profilephoto" class="profilephoto" accept="image/jpeg, image/png, image/gif" onchange="updateFileLabel('{{this.email}}')">
+                <button type="submit" onclick="closeModal('{{this.email}}')">Save</button>
+                <button type="button" onclick="closeModal('{{this.email}}')">Cancel</button>
             </form>
 
+        </div>
+        <div id="deleteModal{{this.email}}" class="editModal" style="display:none">
+            <h2>Confirm Delete?</h2>
+                <form id="deleteForm" action="/deleteUser" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" id="emailToBeDeleted" name="emailToBeDeleted" value="{{this.email}}">
+                    <button type="submit" onclick="closeDeleteModal('{{this.email}}')">
+                        Delete
+                    </button>
+                    <button type="button" onclick="closeDeleteModal('{{this.email}}')">
+                        Cancel
+                    </button>
+
+                </form>
         </div>
             <tr>
                 <td>
@@ -185,7 +230,7 @@
                     {{this.phoneNumber}}
                 </td>
                 <td>
-                    <button class="edit-icon" onclick="openModal({{this.id}})">
+                    <button class="icon" onclick="openModal('{{this.email}}')">
                         <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
                         width="25px" height="25px" viewBox="0 0 494.936 494.936"
                         xml:space="preserve">
@@ -206,9 +251,15 @@
                         </svg>
                     </button>
                 </td>
+                <td>
+                    <button class="icon" onclick="deleteModal('{{this.email}}')">
+                        <svg width="25px" height="25px" viewBox="-5.1 0 85.5 85.5" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Group_14" data-name="Group 14" transform="translate(-837.1 -670)"> <path id="Path_40" data-name="Path 40" d="M905.8,703.3H843.7a4.653,4.653,0,0,1-4.6-4.6v-9.2a4.653,4.653,0,0,1,4.6-4.6h62.1a4.653,4.653,0,0,1,4.6,4.6v9.2A4.653,4.653,0,0,1,905.8,703.3Z" fill="none" stroke="#000000" stroke-miterlimit="10" stroke-width="4"></path> <path id="Path_41" data-name="Path 41" d="M901.6,706v41c-.7.5-3.2,1.9-10,3.1a108.881,108.881,0,0,1-17.2,1.5,92.907,92.907,0,0,1-16.8-1.5c-6.6-1.2-8.9-2.5-9.6-3V706h53.6m4-4H844v45.7c0,5.3,18.5,7.8,30.4,7.8s31.2-2.5,31.2-7.8V702Z" fill="#000000"></path> <line id="Line_17" data-name="Line 17" y2="11.9" transform="translate(862.7 721.6)" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="4"></line> <line id="Line_18" data-name="Line 18" y2="18.9" transform="translate(874.9 718.1)" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="4"></line> <line id="Line_19" data-name="Line 19" y2="11.9" transform="translate(886.9 721.6)" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="4"></line> <path id="Path_42" data-name="Path 42" d="M859,684.2S857.3,672,873.9,672s16.7,12.2,16.7,12.2" fill="none" stroke="#000000" stroke-miterlimit="10" stroke-width="4"></path> </g> </g></svg>
+                    </button>
+                </td>
             </tr>
         {{/each}}
     </table>
+                    
      <form action="/logout">
         <button type="submit">Logout</button>
     </form>
