@@ -524,20 +524,42 @@ app.post('/editAdmin', ensureAuth, async(req, res) => {
  
 });
 
-app.post('/deleteUser', (req, res)=>{
+app.post('/deleteUser',ensureAuth, (req, res)=>{
   try{
     const email = req.body.emailToBeDeleted;
+    let userId;
     console.log(req.body)
-    let delquery = "Delete from accounts where email = ?"
-    Account.node.query(delquery, [email], (err, obj)=>{
+    const userquery = 'Select * from accounts where email = ?';
+    Account.node.query(userquery, [email], (err, user)=>{
       if(err){
-        console.log(err)
+        return;
       }
       else{
-        console.log(obj)
-        res.redirect('/administration')
-      }
-    })
+          user = Object.values(user[0]);
+          userId = user[0]
+          const deletePostsQuery = 'DELETE FROM posts WHERE userid = ?';
+          Account.node.query(deletePostsQuery, [userId], (error, results) => {
+            if (error) {
+              console.error('Error deleting posts:', error);
+              return;
+            }
+            //proceed with deleting user
+            let delquery = "Delete from accounts where email = ?"
+            Account.node.query(delquery, [email], (err, obj)=>{
+              if(err){
+                console.log(err)
+              }
+              else{
+                console.log(obj)
+                res.redirect('/administration')
+              }
+            })
+        
+            });
+          
+          }
+      })
+    
   }
   catch{
     
@@ -545,8 +567,62 @@ app.post('/deleteUser', (req, res)=>{
   }
   
 });
+app.get('/getPosts', ensureAuth, (req, res)=>{
+  try{
+    let postsquery = "SELECT posts.id, posts.content, accounts.fullName AS username FROM posts INNER JOIN accounts ON posts.userid = accounts.id ORDER BY posts.id DESC;"
+    Account.node.query(postsquery, (err, posts)=>{
+      if (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Error fetching posts' });
+      } else {
+        res.status(200).json({ posts });
+      }
+    })
+  }
+  catch{
+    console.log("error fetching posts");
+
+  }
+})
+
+app.post('/submitPost',ensureAuth, (req, res)=>{
+  try{
+    const author = req.session.email;
+    const content = req.body.content;
+    let userquery = "Select * from accounts where email = ?";
+    let insertquery = "Insert into posts (content, userid) VALUES(?, ?)";
+    Account.node.query(userquery, [author], (err, user)=>{
+      user = Object.values(user[0])
+      if(err){
+        return res.send('No User')
+      }
+      else{
+        Account.node.query(insertquery, [content, user[0]], (err, result)=>{
+          if(err){
+            console.log(err)
+            return res.send('Cannot insert')
+          }
+          else{
+            console.log(result)
+            if(user[6] == 'admin'){
+              res.redirect('/administration')
+            }
+            else{
+              res.redirect('/main')
+            }
+            
+          }
+        })
+      }
+    })
+    
 
 
+  }
+  catch{
+    return res.send('Please Try Again')
+  }
+})
 // Start the server
 app.listen(port, () => {
   //console.log(`Server running on port ${port}`);
