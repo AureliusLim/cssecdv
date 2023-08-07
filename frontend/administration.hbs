@@ -110,16 +110,9 @@
         td{
             padding:5px;
         }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 3px;
+        .logoutbutton {
+           padding: 10px 35px;
             background-color: #e91d1d;
-            color: #fff;
-            cursor: pointer;
-            flex: 1;
-            margin-right: 10px;
-            font-size: 16px;
         }
         .icon{
             padding:10px;
@@ -179,7 +172,7 @@
             top: 50%;
             transform: translateY(-50%);
         }
-        .postbutton{
+        button{
             padding: 10px 20px;
             border: none;
             border-radius: 3px;
@@ -218,13 +211,16 @@
         
         <div id="editModal{{this.email}}" class="editModal" style="display:none">
             <h2>Edit User</h2>
-            <form id="editForm" action="/editAdmin" method="POST" enctype="multipart/form-data">
+            <form id="editForm" action="/editUser" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="originalemail" name="originalemail" value="{{this.email}}">
                 <label>Email:</label>
                 <input type="text" id="email" name="email" required value="{{this.email}}">
                 <br>
                 <label>Full Name:</label>
                 <input type="text" id="fullname" name="fullname" required value="{{this.fullName}}">
+                <br>
+                <label>Edited Password:</label>
+                <input type="password" id="pass" name="pass" placeholder="Ignore If No Edit">
                 <br>
                 <label>Phone No.:</label>
                 <input type="text" id="phone" name="phone" required value="{{this.phoneNumber}}">
@@ -294,7 +290,7 @@
     </table>
                     
      <form action="/logout">
-        <button type="submit">Logout</button>
+        <button type="submit" class="logoutbutton">Logout</button>
     </form>
     </div>
 

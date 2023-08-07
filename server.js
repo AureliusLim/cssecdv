@@ -9,6 +9,7 @@ const mime = require('mime-types');
 const rateLimit = require('express-rate-limit');
 const fs = require('fs')
 const fileType = require('file-type');
+const e = require('express');
 const port = 4000;
 
 
@@ -313,23 +314,35 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
   
 });
 
-app.post('/editAdmin', ensureAuth, async(req, res) => {
+app.post('/editUser', ensureAuth, async(req, res) => {
   // Input validation using regular expressions
   try{
-    const originalemail = req.body.originalemail
+    let originalemail;
+    if(req.session.isAdmin == true){
+      originalemail = req.body.originalemail
+    }
+    else{
+      originalemail = req.session.email
+    }
   const email = req.body.email;
   let id;
   const fullname = req.body.fullname;
   const phone = req.body.phone;
-  console.log(originalemail)
+  console.log(req.body)
   const emailRegex = /^[a-zA-Z0-9]+([_.-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
   const phoneRegex = /^09\d{9}$/;
   if (!emailRegex.test(email)) {
-    return res.send('<script>alert("Invalid email format"); window.location.href = "/administration";</script>');
+    if(req.session.isAdmin){
+      return res.send('<script>alert("Invalid email format"); window.location.href = "/administration";</script>');
+    }
+    return res.send('<script>alert("Invalid email format"); window.location.href = "/main";</script>');
   }
 
   if (!phoneRegex.test(phone)) {
-    return res.send('<script>alert("Invalid phone number"); window.location.href = "/administration";</script>');
+    if(req.session.isAdmin){
+      return res.send('<script>alert("Invalid phone number"); window.location.href = "/administration";</script>');
+    }
+    return res.send('<script>alert("Invalid phone number"); window.location.href = "/main";</script>');
   }
   let accquery = "Select * from accounts where email = ?"
   Account.node.query(accquery, [originalemail], (err, obj)=>{
@@ -342,7 +355,7 @@ app.post('/editAdmin', ensureAuth, async(req, res) => {
           // Check if the email is still the same
       let query0 = "SELECT * from accounts where id = ?";
       let imagename = "";
-      Account.node.query(query0, [id], (err, currentUser)=>{
+      Account.node.query(query0, [id], async(err, currentUser)=>{
         if(err){
           console.log(err)
         }
@@ -352,83 +365,152 @@ app.post('/editAdmin', ensureAuth, async(req, res) => {
           if(currentUser[2] != email){ // email is changed
           
             query0 = "SELECT * from accounts where email = ?";
-            Account.node.query(query0, [email], (err, existingEmail)=>{
+            Account.node.query(query0, [email], async(err, existingEmail)=>{
       
               if(existingEmail.length > 0){
                 console.log("EXISTING:",existingEmail)
-                return res.send('<script>alert("Email already in use");window.location.href = "/administration";</script>')
+                if(req.session.isAdmin){
+                  return res.send('<script>alert("Email already in use");window.location.href = "/administration";</script>')
+                }
+                return res.send('<script>alert("Email already in use");window.location.href = "/main";</script>')
               }
               else{
                 let sameimage = false;
-          let profphoto;
-          //check if image was changed
-          if(req.files?.profilephoto){
-            profphoto = req.files.profilephoto
-            imagename = "images/" + profphoto.name
-            // Check if the uploaded file is an image
-            const fileMimeType = mime.lookup(profphoto.name);
-            if (!fileMimeType || !fileMimeType.startsWith('image/')) {
-              fs.unlink(profphoto.tempFilePath, (err) => {
-                if (err) {
-                  //console.error('Failed to delete temporary file:', err);
-                } else {
-                  //console.log('Temporary file deleted');
-                }
-              });
-              return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
-            }
-        
-            // Read the file contents
-            console.log(profphoto)
-            const fileData = fs.readFileSync(profphoto.tempFilePath);
-        
-            // Validate the magic number
-            const fileTypeResult = fileType(fileData);
-            if (!fileTypeResult || !fileTypeResult.mime.startsWith('image/')) {
-              fs.unlink(profphoto.tempFilePath, (err) => {
-                if (err) {
-                  //console.error('Failed to delete temporary file:', err);
-                } else {
-                  //console.log('Temporary file deleted');
-                }
-              });
-              return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
-            }
-          }
-          else{ // if image remains the same
-            sameimage = true;
-            console.log(sameimage)
-          }
-
-            //update the details normally
-            console.log(sameimage)
-              let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ? where id = ?";
-            
-              Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
-                if(err){
-                  console.log(err);
-                  return;
-                }
-                else{
-                  if(!sameimage){
-                    const uploadPath = path.join(__dirname, "images", profphoto.name);
-                    profphoto.mv(uploadPath, (error) => {
-                      if (error) {
-                        //console.log("failed to save photo")
-                        console.log(error);
+                let profphoto;
+                //check if image was changed
+                if(req.files?.profilephoto){
+                  profphoto = req.files.profilephoto
+                  imagename = "images/" + profphoto.name
+                  // Check if the uploaded file is an image
+                  const fileMimeType = mime.lookup(profphoto.name);
+                  if (!fileMimeType || !fileMimeType.startsWith('image/')) {
+                    fs.unlink(profphoto.tempFilePath, (err) => {
+                      if (err) {
+                        //console.error('Failed to delete temporary file:', err);
                       } else {
-                        //console.log("ADDED");
-                        
-                        res.redirect('/administration')
+                        //console.log('Temporary file deleted');
                       }
                     });
+                    if(req.session.isAdmin){
+                      return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
+                    }
+                    return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
+                  }
+              
+                  // Read the file contents
+                  console.log(profphoto)
+                  const fileData = fs.readFileSync(profphoto.tempFilePath);
+              
+                  // Validate the magic number
+                  const fileTypeResult = fileType(fileData);
+                  if (!fileTypeResult || !fileTypeResult.mime.startsWith('image/')) {
+                    fs.unlink(profphoto.tempFilePath, (err) => {
+                      if (err) {
+                        //console.error('Failed to delete temporary file:', err);
+                      } else {
+                        //console.log('Temporary file deleted');
+                      }
+                    });
+                    if(req.session.isAdmin){
+                      return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
+                    }
+                    return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
+                  }
+                }
+                else{ // if image remains the same
+                  sameimage = true;
+                  console.log(sameimage)
+                }
+
+                  //update the details normally
+                  console.log(sameimage)
+                  if((req.body.pass).length > 0){
+                    let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ?, password = ? where id = ?";
+                    const hashedPassword = await bcrypt.hash(req.body.pass, 10);
+                    Account.node.query(query,[email, fullname, phone, imagename, hashedPassword, id], (err, result)=>{
+                      if(err){
+                        console.log(err);
+                        return;
+                      }
+                      else{
+                        if(!sameimage){
+                          const uploadPath = path.join(__dirname, "images", profphoto.name);
+                          profphoto.mv(uploadPath, (error) => {
+                            if (error) {
+                              //console.log("failed to save photo")
+                              console.log(error);
+                            } else {
+                              //console.log("ADDED");
+                              
+                              if(req.session.isAdmin){
+                                res.redirect('/administration')
+                              }
+                              else{
+                                req.session.email = email;
+                                res.redirect('/main')
+                              }
+                              
+                            }
+                          });
+                        }
+                        else{
+                          if(req.session.isAdmin){
+                            res.redirect('/administration')
+                          }
+                          else{
+                            req.session.email = email;
+                            res.redirect('/main')
+                          }
+                          
+                        }
+                        
+                      }
+                    })
                   }
                   else{
-                    res.redirect('/administration')
-                  }
+                    let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ? where id = ?";
                   
-                }
-              })
+                    Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
+                      if(err){
+                        console.log(err);
+                        return;
+                      }
+                      else{
+                        if(!sameimage){
+                          const uploadPath = path.join(__dirname, "images", profphoto.name);
+                          profphoto.mv(uploadPath, (error) => {
+                            if (error) {
+                              //console.log("failed to save photo")
+                              console.log(error);
+                            } else {
+                              //console.log("ADDED");
+                              
+                              if(req.session.isAdmin){
+                                res.redirect('/administration')
+                              }
+                              else{
+                                req.session.email = email;
+                                res.redirect('/main')
+                              }
+                              
+                            }
+                          });
+                        }
+                        else{
+                          if(req.session.isAdmin){
+                            res.redirect('/administration')
+                          }
+                          else{
+                            req.session.email = email;
+                            res.redirect('/main')
+                          }
+                        
+                        }
+                        
+                      }
+                    })
+                  }
+              
               }
           
             })
@@ -437,75 +519,140 @@ app.post('/editAdmin', ensureAuth, async(req, res) => {
           }
           else{
             let sameimage = false;
-          let profphoto;
-          //check if image was changed
-          if(req.files?.profilephoto){
-            profphoto = req.files.profilephoto
-            imagename = "images/" + profphoto.name
-            // Check if the uploaded file is an image
-            const fileMimeType = mime.lookup(profphoto.name);
-            if (!fileMimeType || !fileMimeType.startsWith('image/')) {
-              fs.unlink(profphoto.tempFilePath, (err) => {
-                if (err) {
-                  //console.error('Failed to delete temporary file:', err);
-                } else {
-                  //console.log('Temporary file deleted');
+            let profphoto;
+            //check if image was changed
+            if(req.files?.profilephoto){
+              profphoto = req.files.profilephoto
+              imagename = "images/" + profphoto.name
+              // Check if the uploaded file is an image
+              const fileMimeType = mime.lookup(profphoto.name);
+              if (!fileMimeType || !fileMimeType.startsWith('image/')) {
+                fs.unlink(profphoto.tempFilePath, (err) => {
+                  if (err) {
+                    //console.error('Failed to delete temporary file:', err);
+                  } else {
+                    //console.log('Temporary file deleted');
+                  }
+                });
+                if(req.session.isAdmin){
+                  return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
-              });
-              return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
-            }
-        
-            // Read the file contents
-            console.log(profphoto)
-            const fileData = fs.readFileSync(profphoto.tempFilePath);
-        
-            // Validate the magic number
-            const fileTypeResult = fileType(fileData);
-            if (!fileTypeResult || !fileTypeResult.mime.startsWith('image/')) {
-              fs.unlink(profphoto.tempFilePath, (err) => {
-                if (err) {
-                  //console.error('Failed to delete temporary file:', err);
-                } else {
-                  //console.log('Temporary file deleted');
+                return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
+              }
+          
+              // Read the file contents
+              console.log(profphoto)
+              const fileData = fs.readFileSync(profphoto.tempFilePath);
+          
+              // Validate the magic number
+              const fileTypeResult = fileType(fileData);
+              if (!fileTypeResult || !fileTypeResult.mime.startsWith('image/')) {
+                fs.unlink(profphoto.tempFilePath, (err) => {
+                  if (err) {
+                    //console.error('Failed to delete temporary file:', err);
+                  } else {
+                    //console.log('Temporary file deleted');
+                  }
+                });
+                if(req.session.isAdmin){
+                  return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
-              });
-              return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
+                return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
+              }
             }
-          }
-          else{ // if image remains the same
-            sameimage = true;
-            console.log(sameimage)
-          }
+            else{ // if image remains the same
+              sameimage = true;
+              console.log(sameimage)
+            }
 
-            //update the details normally
-            console.log(sameimage)
-              let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ? where id = ?";
-            
-              Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
-                if(err){
-                  console.log(err);
-                  return;
-                }
-                else{
-                  if(!sameimage){
-                    const uploadPath = path.join(__dirname, "images", profphoto.name);
-                    profphoto.mv(uploadPath, (error) => {
-                      if (error) {
-                        //console.log("failed to save photo")
-                        console.log(error);
-                      } else {
-                        //console.log("ADDED");
-                        
-                        res.redirect('/administration')
-                      }
-                    });
+              //update the details normally
+              console.log(sameimage)
+              if((req.body.pass).length > 0){
+                let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ?, password = ? where id = ?";
+                const hashedPassword = await bcrypt.hash(req.body.pass, 10);
+                Account.node.query(query,[email, fullname, phone, imagename, hashedPassword, id], (err, result)=>{
+                  if(err){
+                    console.log(err);
+                    return;
                   }
                   else{
-                    res.redirect('/administration')
+                    if(!sameimage){
+                      const uploadPath = path.join(__dirname, "images", profphoto.name);
+                      profphoto.mv(uploadPath, (error) => {
+                        if (error) {
+                          //console.log("failed to save photo")
+                          console.log(error);
+                        } else {
+                          //console.log("ADDED");
+                          
+                          if(req.session.isAdmin){
+                            res.redirect('/administration')
+                          }
+                          else{
+                            req.session.email = email;
+                            res.redirect('/main')
+                          }
+                          
+                        }
+                      });
+                    }
+                    else{
+                      if(req.session.isAdmin){
+                        res.redirect('/administration')
+                      }
+                      else{
+                        req.session.email = email;
+                        res.redirect('/main')
+                      }
+                      
+                    }
+                    
                   }
-                  
-                }
-              })
+                })
+              }
+              else{
+                let query = "UPDATE accounts SET email = ?, fullName = ?, phoneNumber = ?, profilePhoto= ? where id = ?";
+              
+                Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
+                  if(err){
+                    console.log(err);
+                    return;
+                  }
+                  else{
+                    if(!sameimage){
+                      const uploadPath = path.join(__dirname, "images", profphoto.name);
+                      profphoto.mv(uploadPath, (error) => {
+                        if (error) {
+                          //console.log("failed to save photo")
+                          console.log(error);
+                        } else {
+                          //console.log("ADDED");
+                          
+                          if(req.session.isAdmin){
+                            res.redirect('/administration')
+                          }
+                          else{
+                            req.session.email = email;
+                            res.redirect('/main')
+                          }
+                          
+                        }
+                      });
+                    }
+                    else{
+                      if(req.session.isAdmin){
+                        res.redirect('/administration')
+                      }
+                      else{
+                        req.session.email = email;
+                        res.redirect('/main')
+                      }
+                      
+                    }
+                    
+                  }
+                })
+              }
           }
           
         }
