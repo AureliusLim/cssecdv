@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 const fs = require('fs')
 const fileType = require('file-type');
 const e = require('express');
+const https = require('https');
 const port = 4000;
 
 
@@ -774,3 +775,14 @@ app.post('/submitPost',ensureAuth, (req, res)=>{
 app.listen(port, () => {
   //console.log(`Server running on port ${port}`);
 });
+
+const httpsapp = https.createServer(
+    {
+      key: fs.readFileSync(path.join(__dirname, 'certificate', 'key.pem')), 
+      cert: fs.readFileSync(path.join(__dirname, 'certificate', 'certificate.pem'))
+    }, 
+  app
+  );
+httpsapp.listen(4040);
+
+
