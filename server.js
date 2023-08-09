@@ -82,6 +82,7 @@ app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
       Account.node.query(query, [email], async (error, results) => {
         if (results.length == 0) { // no email matched
           console.error('Error retrieving user:', error);
+          logger.info('Failed Login Attempt', { error:error });
           return res.send('Invalid Credentials');
         }
         user = Object.values(results[0]);
@@ -111,12 +112,13 @@ app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
           } else {
             // Passwords do not match
             req.session.isAuth = false;
+            logger.info('Failed Login Attempt', { input:{email,password} });
             res.status(404).send('Invalid credentials');
           }
         } else {
           // User not found
           req.session.isAuth = false;
-          logger.warn('Invalid credentials', { email: email });
+          logger.info('Failed Login Attempt', { input:{email,password} });
           res.status(404).send('Invalid credentials');
         }
       })
@@ -147,6 +149,7 @@ app.get('/main', ensureAuth, async (req, res) =>{
 
 // Logout Function
 app.get('/logout', ensureAuth, (req, res) => {
+  logger.info('User Logged Out', { email:req.session.email});
   req.session.destroy();
   res.render('login.hbs');
 });
@@ -215,6 +218,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             //console.log('Temporary file deleted');
           }
         });
+        logger.info('Failed to Register User', { error:"Invalid email format"});
         return res.send('<script>alert("Invalid email format"); window.location.href = "/register";</script>');
       }
 
@@ -226,6 +230,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             //console.log('Temporary file deleted');
           }
         });
+        logger.info('Failed to Register User', { error:"Invalid phone number"});
         return res.send('<script>alert("Invalid phone number"); window.location.href = "/register";</script>');
       }
     
@@ -238,6 +243,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             //console.log('Temporary file deleted');
           }
         });
+        logger.info('Failed to Register User', { error:"Please fill in all fields"});
         return res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
       }
       // Check if the uploaded file is an image
@@ -250,6 +256,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             //console.log('Temporary file deleted');
           }
         });
+        logger.info('Failed to Register User', { error:"Invalid file format. Please upload an image file."});
         return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
@@ -266,6 +273,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             //console.log('Temporary file deleted');
           }
         });
+        logger.info('Failed to Register User', { error:"Invalid file format. Please upload an image file."});
         return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
@@ -281,6 +289,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
                 //console.log('Temporary file deleted');
               }
             });
+            logger.info('Failed to Register User', { error:"Email already registered"});
             return res.send('<script>alert("Email already registered"); window.location.href = "/register";</script>');
           }
           else{ // register the account
@@ -292,6 +301,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
               Account.node.query(query,[fullname, email, phone, "images/" + profphoto.name, hashedPassword, "user"], (err, result)=>{
                 if(err){
                   //console.log(err);
+                  logger.info('Failed to Register User', { error:err});
                   return;
                 }
                 else{
@@ -302,6 +312,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
                     if (error) {
                       //console.log("failed to save photo")
                       //console.log(error);
+                      logger.info('Failed to Register User', { error:error});
                     } else {
                       //console.log("ADDED");
                       logger.info('User Registration Successful', { email: email });
@@ -314,6 +325,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             } 
             catch (err) {
               //console.log(err);
+               logger.info('Failed to Register User', { error:err});
             }
           }
         })
@@ -347,15 +359,19 @@ app.post('/editUser', ensureAuth, async(req, res) => {
   const phoneRegex = /^09\d{9}$/;
   if (!emailRegex.test(email)) {
     if(req.session.isAdmin){
+      logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
       return res.send('<script>alert("Invalid email format"); window.location.href = "/administration";</script>');
     }
+    logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
     return res.send('<script>alert("Invalid email format"); window.location.href = "/main";</script>');
   }
 
   if (!phoneRegex.test(phone)) {
     if(req.session.isAdmin){
+      logger.info('Failed to Edit User', { editedUser: email, error:"Invalid phone number"});
       return res.send('<script>alert("Invalid phone number"); window.location.href = "/administration";</script>');
     }
+    logger.info('Failed to Edit User', { editedUser: email, error:"Invalid phone number"});
     return res.send('<script>alert("Invalid phone number"); window.location.href = "/main";</script>');
   }
   let accquery = "Select * from accounts where email = ?"
@@ -384,8 +400,10 @@ app.post('/editUser', ensureAuth, async(req, res) => {
               if(existingEmail.length > 0){
                 console.log("EXISTING:",existingEmail)
                 if(req.session.isAdmin){
+                  logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
                   return res.send('<script>alert("Email already in use");window.location.href = "/administration";</script>')
                 }
+                logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
                 return res.send('<script>alert("Email already in use");window.location.href = "/main";</script>')
               }
               else{
@@ -406,8 +424,10 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                       }
                     });
                     if(req.session.isAdmin){
+                      logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                       return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                     }
+                    logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                     return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
                   }
               
@@ -426,8 +446,10 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                       }
                     });
                     if(req.session.isAdmin){
+                      logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                       return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                     }
+                    logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                     return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
                   }
                 }
@@ -444,6 +466,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                     Account.node.query(query,[email, fullname, phone, imagename, hashedPassword, id], (err, result)=>{
                       if(err){
                         console.log(err);
+                        logger.info('Failed to Edit User', { editedUser: email, error:err});
                         return;
                       }
                       else{
@@ -452,6 +475,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                           profphoto.mv(uploadPath, (error) => {
                             if (error) {
                               //console.log("failed to save photo")
+                              logger.info('Failed to Edit User', { editedUser: email, error:error});
                               console.log(error);
                             } else {
                               //console.log("ADDED");
@@ -490,6 +514,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                   
                     Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
                       if(err){
+                        logger.info('Failed to Edit User', { editedUser: email, error:err});
                         console.log(err);
                         return;
                       }
@@ -499,6 +524,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                           profphoto.mv(uploadPath, (error) => {
                             if (error) {
                               //console.log("failed to save photo")
+                              logger.info('Failed to Edit User', { editedUser: email, error:error});
                               console.log(error);
                             } else {
                               //console.log("ADDED");
@@ -557,8 +583,10 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                   }
                 });
                 if(req.session.isAdmin){
+                  logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                   return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
+                logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                 return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
               }
           
@@ -572,13 +600,16 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                 fs.unlink(profphoto.tempFilePath, (err) => {
                   if (err) {
                     //console.error('Failed to delete temporary file:', err);
+                    
                   } else {
                     //console.log('Temporary file deleted');
                   }
                 });
                 if(req.session.isAdmin){
+                  logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                   return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
+                logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
                 return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
               }
             }
@@ -594,6 +625,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                 const hashedPassword = await bcrypt.hash(req.body.pass, 10);
                 Account.node.query(query,[email, fullname, phone, imagename, hashedPassword, id], (err, result)=>{
                   if(err){
+                    logger.info('Failed to Edit User', { editedUser: email, error:err});
                     console.log(err);
                     return;
                   }
@@ -603,6 +635,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                       profphoto.mv(uploadPath, (error) => {
                         if (error) {
                           //console.log("failed to save photo")
+                          logger.info('Failed to Edit User', { editedUser: email, error:err});
                           console.log(error);
                         } else {
                           //console.log("ADDED");
@@ -641,6 +674,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
               
                 Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
                   if(err){
+                    logger.info('Failed to Edit User', { editedUser: email, error:err});
                     console.log(err);
                     return;
                   }
@@ -650,6 +684,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                       profphoto.mv(uploadPath, (error) => {
                         if (error) {
                           //console.log("failed to save photo")
+                          logger.info('Failed to save photo', { email: req.session.email, error:error});
                           console.log(error);
                         } else {
                           //console.log("ADDED");
@@ -709,6 +744,7 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
     const userquery = 'Select * from accounts where email = ?';
     Account.node.query(userquery, [email], (err, user)=>{
       if(err){
+        logger.info('Failed in Deleting User', { usertoDelete: email, error:err});
         return;
       }
       else{
@@ -717,6 +753,7 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
           const deletePostsQuery = 'DELETE FROM posts WHERE userid = ?';
           Account.node.query(deletePostsQuery, [userId], (error, results) => {
             if (error) {
+              logger.info('Failed in Deleting User', { usertoDelete: email, error:error});
               console.error('Error deleting posts:', error);
               return;
             }
@@ -724,6 +761,7 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
             let delquery = "Delete from accounts where email = ?"
             Account.node.query(delquery, [email], (err, obj)=>{
               if(err){
+                logger.info('Failed in Deleting User', { email: req.session.email, error:err});
                 console.log(err)
               }
               else{
@@ -772,12 +810,14 @@ app.post('/submitPost',ensureAuth, (req, res)=>{
     Account.node.query(userquery, [author], (err, user)=>{
       user = Object.values(user[0])
       if(err){
+        logger.info('Admin submitted post', { email: req.session.email, error:err});
         return res.send('No User')
       }
       else{
         Account.node.query(insertquery, [content, user[0]], (err, result)=>{
           if(err){
             console.log(err)
+            logger.info('Failed Submission of a post', { email: req.session.email, error:err});
             return res.send('Cannot insert')
           }
           else{
