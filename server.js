@@ -11,6 +11,7 @@ const fs = require('fs')
 const fileType = require('file-type');
 const v = require('validator');
 const https = require('https');
+const winston = require('winston')
 const port = 4000;
 
 
@@ -33,7 +34,16 @@ app.use(session({
     maxAge: 30 * 60 * 1000 // 30 mins in milliseconds
   }
 }))
-
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: './logs/logs.log' }) 
+  ]
+});
 const ensureAuth = (req, res, next) => { //for the future pag di na res.render yung login lang
   if (req.session.auth)
     next()
@@ -87,11 +97,13 @@ app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
             req.session.email = email;
             if(user[6] == "user"){// default login
               req.session.isAdmin = false;
+              logger.info('User Authenticated', { email: email });
               //console.log(user)
               res.render('main.hbs', {profilePhoto: user[4], fullName: user[1], email: user[2], phoneNumber: user[3], role: user[6]});
             }
             else{// user is an admin
               req.session.isAdmin = true
+              logger.info('Admin Authenticated', { email: email });
               res.redirect('/administration')
             }
             
@@ -104,6 +116,7 @@ app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
         } else {
           // User not found
           req.session.isAuth = false;
+          logger.warn('Invalid credentials', { email: email });
           res.status(404).send('Invalid credentials');
         }
       })
@@ -291,7 +304,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
                       //console.log(error);
                     } else {
                       //console.log("ADDED");
-                      
+                      logger.info('User Registration Successful', { email: email });
                       res.redirect('/')
                     }
                   });
@@ -442,11 +455,13 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                               console.log(error);
                             } else {
                               //console.log("ADDED");
-                              
+                             
                               if(req.session.isAdmin){
+                                logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                                 res.redirect('/administration')
                               }
                               else{
+                                logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                                 req.session.email = email;
                                 res.redirect('/main')
                               }
@@ -456,9 +471,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                         }
                         else{
                           if(req.session.isAdmin){
+                            logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                             res.redirect('/administration')
                           }
                           else{
+                            logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                             req.session.email = email;
                             res.redirect('/main')
                           }
@@ -487,9 +504,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                               //console.log("ADDED");
                               
                               if(req.session.isAdmin){
+                                logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                                 res.redirect('/administration')
                               }
                               else{
+                                logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                                 req.session.email = email;
                                 res.redirect('/main')
                               }
@@ -499,9 +518,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                         }
                         else{
                           if(req.session.isAdmin){
+                            logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                             res.redirect('/administration')
                           }
                           else{
+                            logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                             req.session.email = email;
                             res.redirect('/main')
                           }
@@ -587,9 +608,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                           //console.log("ADDED");
                           
                           if(req.session.isAdmin){
+                            logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                             res.redirect('/administration')
                           }
                           else{
+                            logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                             req.session.email = email;
                             res.redirect('/main')
                           }
@@ -599,9 +622,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                     }
                     else{
                       if(req.session.isAdmin){
+                        logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                         res.redirect('/administration')
                       }
                       else{
+                        logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                         req.session.email = email;
                         res.redirect('/main')
                       }
@@ -630,9 +655,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                           //console.log("ADDED");
                           
                           if(req.session.isAdmin){
+                            logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                             res.redirect('/administration')
                           }
                           else{
+                            logger.info('User performed edit', { email: req.session.email,updatedDetails:[email,fullname,phone,imagename]});
                             req.session.email = email;
                             res.redirect('/main')
                           }
@@ -642,9 +669,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                     }
                     else{
                       if(req.session.isAdmin){
+                        logger.info('Admin edited User', { editedUser: originalemail,updatedDetails:[email,fullname,phone,imagename]});
                         res.redirect('/administration')
                       }
                       else{
+                        logger.info('User performed edit', { email: req.session.email, updatedDetails:[email,fullname,phone,imagename]});
                         req.session.email = email;
                         res.redirect('/main')
                       }
@@ -699,6 +728,7 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
               }
               else{
                 console.log(obj)
+                logger.info('User is deleted', { deleteduser: email});
                 res.redirect('/administration')
               }
             })
@@ -753,9 +783,11 @@ app.post('/submitPost',ensureAuth, (req, res)=>{
           else{
             console.log(result)
             if(user[6] == 'admin'){
+              logger.info('Admin submitted post', { email: req.session.email, content:content});
               res.redirect('/administration')
             }
             else{
+              logger.info('User submitted post', { email: req.session.email, content:content});
               res.redirect('/main')
             }
             
