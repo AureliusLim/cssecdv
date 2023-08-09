@@ -9,9 +9,8 @@ const mime = require('mime-types');
 const rateLimit = require('express-rate-limit');
 const fs = require('fs')
 const fileType = require('file-type');
-const v = require('validator');
+const e = require('express');
 const https = require('https');
-
 const port = 4000;
 
 
@@ -31,8 +30,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 30 * 60 * 1000, // 30 mins in milliseconds
-    httpOnly: true
+    maxAge: 30 * 60 * 1000 // 30 mins in milliseconds
   }
 }))
 
@@ -188,7 +186,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
   try{
    
       const profphoto = req.files.profilephoto;
-      const fullname = v.escape(req.body.fullname);
+      const fullname = req.body.fullname;
       const email = req.body.email;
       const phone = req.body.phone;
       const password = req.body.password;
@@ -329,7 +327,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
     }
   const email = req.body.email;
   let id;
-  const fullname = v.escape(req.body.fullname);
+  const fullname = req.body.fullname;
   const phone = req.body.phone;
   console.log(req.body)
   const emailRegex = /^[a-zA-Z0-9]+([_.-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
@@ -738,7 +736,7 @@ app.get('/getPosts', ensureAuth, (req, res)=>{
 app.post('/submitPost',ensureAuth, (req, res)=>{
   try{
     const author = req.session.email;
-    const content = v.escape(req.body.content);
+    const content = req.body.content;
     let userquery = "Select * from accounts where email = ?";
     let insertquery = "Insert into posts (content, userid) VALUES(?, ?)";
     Account.node.query(userquery, [author], (err, user)=>{
@@ -774,9 +772,6 @@ app.post('/submitPost',ensureAuth, (req, res)=>{
   }
 })
 // Start the server
-app.listen(port, () => {
-  //console.log(`Server running on port ${port}`);
-});
 
 const httpsapp = https.createServer(
     {
@@ -785,6 +780,6 @@ const httpsapp = https.createServer(
     }, 
   app
   );
-httpsapp.listen(4040);
+httpsapp.listen(port);
 
 
