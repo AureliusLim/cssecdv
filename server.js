@@ -128,8 +128,12 @@ app.post('/login', loginLimit, ensureNotAuth, async (req, res) => {
 
       
     } catch (err) {
-      //console.log(err);
-      res.send('Error occurred');
+      if(debugMode){
+        console.log(err.stack);
+      }
+      else{
+        console.log('Error occured')
+      }
     }
   });
 
@@ -186,14 +190,13 @@ app.get('/administration', ensureAuth, (req, res) => {
     }
   }
   catch(err){
-    //console.log(err)
-    res.send('error has occurred')
+    if(debugMode){
+      console.log(err.stack);
+    }
+    else{
+      console.log('Error occured')
+    }
   }
-  
-
-   
- 
-  
 });
 
 // Direct to registration hbs
@@ -729,8 +732,14 @@ app.post('/editUser', ensureAuth, async(req, res) => {
   })
   }
   catch{
-    console.log('an error occurred')
-    return res.send('Please Try Again')
+    if(debugMode){
+      console.log(err.stack);
+    }
+    else{
+      console.log('Error occured')
+    }
+    // console.log('an error occurred')
+    // return res.send('Please Try Again')
   }
   
  
@@ -781,8 +790,13 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
     
   }
   catch{
-    
-    return res.send('Please Try Again')
+    if(debugMode){
+      console.log(err.stack);
+    }
+    else{
+      console.log('Error occured')
+    }
+    // return res.send('Please Try Again')
   }
   
 });
