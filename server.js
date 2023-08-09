@@ -13,6 +13,7 @@ const v = require('validator');
 const https = require('https');
 const winston = require('winston')
 const port = 4000;
+const debugMode = process.env.DEBUG_MODE;
 
 
 // Set up the 'hbs' view engine
@@ -67,7 +68,9 @@ const loginLimit = rateLimit({
 
 // Define a route for '/register' to render the registration template
 app.get('/', ensureNotAuth, (req, res) => {
-  
+  if(debugMode){
+    console.log('App is running on debug mode')
+  }
   res.render('login.hbs');
 });
 // Handle the login form submission
