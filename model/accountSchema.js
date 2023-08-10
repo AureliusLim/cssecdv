@@ -43,7 +43,7 @@ pool.query(accountTable, (error, results, fields) => {
         logger.debug(error);
     return;
   }
-  logger.info('Accounts table created successfully');
+  logger.debug('Accounts table created successfully');
 
   // Create the posts table if it doesn't exist
   pool.query(postsTable, (error, results, fields) => {
@@ -53,7 +53,7 @@ pool.query(accountTable, (error, results, fields) => {
         logger.debug(error);
       return;
     }
-    logger.info('Posts table created successfully');
+    logger.debug('Posts table created successfully');
 
       // Add admin account if it doesn't exist
       const adminEmail = 'admin@gmail.com';
@@ -81,7 +81,7 @@ pool.query(accountTable, (error, results, fields) => {
                   if(debugMode)
                     logger.debug(error);
                 } else {
-                  logger.info('Admin account created successfully');
+                  logger.debug('Admin account created successfully');
                 }
               }
             );
