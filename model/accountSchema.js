@@ -1,5 +1,7 @@
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
+const logger = require('../loggers/logger.js');
+const debugMode = process.env.DEBUG_MODE;
 
 // Create a MySQL connection pool
 const pool = mysql.createPool({
@@ -36,18 +38,22 @@ CREATE TABLE IF NOT EXISTS posts (
 // Create the accounts table if it doesn't exist
 pool.query(accountTable, (error, results, fields) => {
   if (error) {
-    console.error('Error creating accounts table:', error);
+    logger.error('Error creating accounts table');
+    if(debugMode)
+        logger.debug(error);
     return;
   }
-  console.log('Accounts table created successfully');
+  logger.info('Accounts table created successfully');
 
   // Create the posts table if it doesn't exist
   pool.query(postsTable, (error, results, fields) => {
     if (error) {
-      console.error('Error creating posts table:', error);
+      logger.error('Error creating posts table');
+      if(debugMode)
+        logger.debug(error);
       return;
     }
-    console.log('Posts table created successfully');
+    logger.info('Posts table created successfully');
 
       // Add admin account if it doesn't exist
       const adminEmail = 'admin@gmail.com';
@@ -58,7 +64,9 @@ pool.query(accountTable, (error, results, fields) => {
         [adminEmail],
         async (error, results) => {
           if (error) {
-            console.error('Error checking for admin account:', error);
+            logger.error('Error checking for admin account');
+            if(debugMode)
+              logger.debug(error);
             return;
           } else if (results.length == 0) {
             const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -69,9 +77,11 @@ pool.query(accountTable, (error, results, fields) => {
               ['Admin', adminEmail, '00000000000', '', hashedPassword, 'admin'],
               (err, result) => {
                 if (err) {
-                  console.log('Admin account not made');
+                  logger.error('Admin account not made');
+                  if(debugMode)
+                    logger.debug(error);
                 } else {
-                  console.log('Admin account created successfully');
+                  logger.info('Admin account created successfully');
                 }
               }
             );
