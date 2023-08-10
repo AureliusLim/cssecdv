@@ -23,7 +23,10 @@ CSSECDV - S11
 
 # Deployment Instruction:
 - Install node_modules by entering this command: npm i
-- To start the application, enter the following command: npm start
+- To start the production application, enter the following command: npm run start
+       - To start the development application, enter: npm run debug
+- To view the application, go to https://localhost:4000
+- The application uses a self-signed HTTPS certificate and will prompt a privacy error.  You can proceed to localhost (unsafe), which is usually found when clicking the “Advance” button.
 - The application uses the following fixed credentials for the administrator:
        - Email: admin@gmail.com
        - password: adminacc
