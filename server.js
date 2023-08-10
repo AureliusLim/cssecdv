@@ -230,7 +230,8 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             logger.debug('Temporary file deleted');
           }
         });
-        logger.info('Failed to Register User', { error:"Invalid email format"});
+        logger.info('Failed to Register User');
+        logger.debug('Invalid email format')
         return res.send('<script>alert("Invalid email format"); window.location.href = "/register";</script>');
       }
 
@@ -246,7 +247,8 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             logger.debug('Temporary file deleted');
           }
         });
-        logger.info('Failed to Register User', { error:"Invalid phone number"});
+        logger.info('Failed to Register User', {error: "Invalid phone number"});
+        logger.debug("Invalid phone number")
         return res.send('<script>alert("Invalid phone number"); window.location.href = "/register";</script>');
       }
     
@@ -264,6 +266,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
           }
         });
         logger.info('Failed to Register User', { error:"Please fill in all fields"});
+        logger.debug('Please fill in all fields')
         return res.send('<script>alert("Please fill in all fields"); window.location.href = "/register";</script>');
       }
       // Check if the uploaded file is an image
@@ -280,7 +283,8 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
             logger.debug('Temporary file deleted');
           }
         });
-        logger.info('Failed to Register User', { error:"Invalid file format. Please upload an image file."});
+        logger.info('Failed to Register User', {error: "Invalid file format. Please upload an image file."});
+        logger.debug("Invalid file format. Please upload an image file.")
         return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
@@ -302,6 +306,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
           }
         });
         logger.info('Failed to Register User', { error:"Invalid file format. Please upload an image file."});
+        logger.debug("Invalid file format. Please upload an image file.")
         return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/register";</script>');
       }
 
@@ -321,7 +326,8 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
                 logger.debug('Temporary file deleted');
               }
             });
-            logger.info('Failed to Register User', { error:"Email already registered"});
+            logger.info('Failed to Register User', {error: "Email already registered"});
+            logger.debug('Email already registered')
             return res.send('<script>alert("Email already registered"); window.location.href = "/register";</script>');
           }
           else{ // register the account
@@ -350,7 +356,7 @@ app.post('/registerdetails', ensureNotAuth, async(req, res) => {
                       if(debugMode){
                         logger.debug(error);
                       }
-                      logger.info('Failed to Register User');
+                      logger.error('Failed to Register User');
                     } else {
                       if(debugMode){
                         logger.debug("ADDED")
@@ -407,19 +413,23 @@ app.post('/editUser', ensureAuth, async(req, res) => {
   const phoneRegex = /^09\d{9}$/;
   if (!emailRegex.test(email)) {
     if(req.session.isAdmin){
-      logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
+      logger.info('Failed to Edit User', { editedUser: email, error:"Invalid email format"});
+      logger.debug("Invalid email format")
       return res.send('<script>alert("Invalid email format"); window.location.href = "/administration";</script>');
     }
-    logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
+    logger.info('Failed to Edit User', { editedUser: email, error:"Invalid email format"});
+    logger.debug("Invalid email format")
     return res.send('<script>alert("Invalid email format"); window.location.href = "/main";</script>');
   }
 
   if (!phoneRegex.test(phone)) {
     if(req.session.isAdmin){
       logger.info('Failed to Edit User', { editedUser: email, error:"Invalid phone number"});
+      logger.debug("Invalid phone number")
       return res.send('<script>alert("Invalid phone number"); window.location.href = "/administration";</script>');
     }
     logger.info('Failed to Edit User', { editedUser: email, error:"Invalid phone number"});
+    logger.debug("Invalid phone number")
     return res.send('<script>alert("Invalid phone number"); window.location.href = "/main";</script>');
   }
   let accquery = "Select * from accounts where email = ?"
@@ -455,9 +465,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                 logger.debug(`EXISTING: ${existingEmail}`)
                 if(req.session.isAdmin){
                   logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
+                  logger.debug("Email already in use")
                   return res.send('<script>alert("Email already in use");window.location.href = "/administration";</script>')
                 }
                 logger.info('Failed to Edit User', { editedUser: email, error:"Email already in use"});
+                logger.debug("Email already in use")
                 return res.send('<script>alert("Email already in use");window.location.href = "/main";</script>')
               }
               else{
@@ -483,9 +495,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                     });
                     if(req.session.isAdmin){
                       logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                      logger.debug("Invalid file format. Please upload an image file.")
                       return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                     }
                     logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                    logger.debug("Invalid file format. Please upload an image file.")
                     return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
                   }
               
@@ -514,9 +528,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                     });
                     if(req.session.isAdmin){
                       logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                      logger.debug("Invalid file format. Please upload an image file.")
                       return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                     }
                     logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                    logger.debug("Invalid file format. Please upload an image file.")
                     return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
                   }
                 }
@@ -536,7 +552,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                         if(debugMode){
                           logger.debug(err);
                         }
-                        logger.info('Failed to Edit User', { editedUser: email, error:err});
+                        logger.info('Failed to Edit User', { editedUser: email});
                         return;
                       }
                       else{
@@ -548,7 +564,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                                 logger.error("failed to save photo")
                                 logger.debug(error);
                               }
-                              logger.info('Failed to Edit User', { editedUser: email, error:error});
+                              logger.info('Failed to Edit User', { editedUser: email});
                               
                             } else {
                               if(debugMode){
@@ -588,7 +604,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                   
                     Account.node.query(query,[email, fullname, phone, imagename, id], (err, result)=>{
                       if(err){
-                        logger.info('Failed to Edit User', { editedUser: email, error:err});
+                        logger.info('Failed to Edit User', { editedUser: email});
                         if(debugMode){
                           logger.debug(err);
                         }
@@ -603,7 +619,7 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                                 logger.error('failed to save image')
                                 logger.debug(err);
                               }
-                              logger.info('Failed to Edit User', { editedUser: email, error:error});
+                              logger.info('Failed to Edit User', { editedUser: email});
                             } else {
                               if(debugMode){
                                 logger.debug("ADDED");
@@ -667,9 +683,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                 });
                 if(req.session.isAdmin){
                   logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                  logger.debug("Invalid file format. Please upload an image file.")
                   return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
                 logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                logger.debug("Invalid file format. Please upload an image file.")
                 return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
               }
           
@@ -696,9 +714,11 @@ app.post('/editUser', ensureAuth, async(req, res) => {
                 });
                 if(req.session.isAdmin){
                   logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                  logger.debug("Invalid file format. Please upload an image file.")
                   return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/administration";</script>');
                 }
                 logger.info('Failed to Edit User', { editedUser: email, error:"Invalid file format. Please upload an image file."});
+                logger.debug("Invalid file format. Please upload an image file.")
                 return res.send('<script>alert("Invalid file format. Please upload an image file."); window.location.href = "/main";</script>');
               }
             }
@@ -850,7 +870,7 @@ app.post('/deleteUser',ensureAuth, (req, res)=>{
     const userquery = 'Select * from accounts where email = ?';
     Account.node.query(userquery, [email], (err, user)=>{
       if(err){
-        logger.error('Failed in Deleting User', { usertoDelete: email, error:err});
+        logger.error('Failed in Deleting User', { usertoDelete: email});
         if(debugMode){
           logger.debug(err);
         }
